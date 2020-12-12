@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package gRPC.Message;
+import "google/protobuf/timestamp.proto";
+
+message Article {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp publish_ts = 3;
+  string context = 4;
+  string subtitle = 16;
+}
