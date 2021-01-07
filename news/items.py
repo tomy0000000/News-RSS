@@ -7,12 +7,13 @@ import scrapy
 
 
 class NewsItem(scrapy.Item):
-    url = scrapy.Field()  # link
+    url = scrapy.Field()  # link, guid
     title = scrapy.Field()  # title
     context = scrapy.Field()  # description
     author = scrapy.Field()  # author
+    image = scrapy.Field()  # enclosure
     category = scrapy.Field()  # category
-    id = scrapy.Field()  # guid
+    id = scrapy.Field()
     timestamp = scrapy.Field()  # pubDate
     third_party = scrapy.Field()  # source
     subtitle = scrapy.Field()

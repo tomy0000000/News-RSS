@@ -1,11 +1,12 @@
 from news.exporters import RSSExporter
 
 ITEM_TO_RSS_MAPPING = {
-    "url": "link",
-    "context": "description",
-    "id": "guid",
-    "timestamp": "pubDate",
-    "third_party": "source",
+    "url": ["link", "guid"],
+    "context": ["description"],
+    "image": ["enclosure"],
+    "id": ["guid"],
+    "timestamp": ["pubDate"],
+    "third_party": ["source"],
 }
 
 
@@ -13,7 +14,8 @@ def extend_to_rss_field(item):
     new_fields = {}
     for field, value in item.items():
         if field in ITEM_TO_RSS_MAPPING:
-            new_fields[ITEM_TO_RSS_MAPPING[field]] = value
+            for rss_field in ITEM_TO_RSS_MAPPING[field]:
+                new_fields[rss_field] = value
     item.update(new_fields)
     return item
 

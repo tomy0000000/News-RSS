@@ -23,7 +23,11 @@ class AppleDailySpider(scrapy.Spider):
         "category": "News",
         "copyright": "© 2020 APPLE ONLINE All rights reserved. 蘋果新聞網 版權所有 不得轉載",
         "description": "提供全面新聞資訊、即時分析，全天候報道本地及全球新聞。",
-        "image": "https://img.appledaily.com.tw/appledaily/images/fbshare/appledaily_fb_600x315.png",
+        "image": {
+            "height": "315",
+            "url": "https://img.appledaily.com.tw/appledaily/images/fbshare/appledaily_fb_600x315.png",
+            "width": "600",
+        },
         "language": "zh-tw",
         "link": "https://tw.appledaily.com",
         "title": "蘋果新聞網",
@@ -61,11 +65,13 @@ class AppleDailySpider(scrapy.Spider):
     def parse_news(self, response):
         url = response.url
         context_selector = response.xpath("//*[@id='articleBody']/section[2]/p")
-        for sel in context_selector:
-            self.logger.info(
-                "".join(sel.xpath("descendant-or-self::*/text()").getall())
-            )
-        yield {
+        image_url = response.xpath("/html/head/meta[@property='og:image']").attrib[
+            "content"
+        ]
+        image_type = response.xpath(
+            "/html/head/meta[@property='og:image:type']"
+        ).attrib["content"]
+        item = {
             "url": url,
             "title": response.xpath(
                 "//*[@id='article-header']/header/div/h1/span/text()"
@@ -77,6 +83,10 @@ class AppleDailySpider(scrapy.Spider):
                 ]
             ),
             "author": context_selector.re_first(r"【(.*)】"),
+            "image": {
+                "url": image_url,
+                "type": image_type,
+            },
             "category": CATEGORIES.get(url.split("/")[-4]),
             "id": url.split("/")[-2],
             "timestamp": datetime.strptime(
@@ -88,3 +98,14 @@ class AppleDailySpider(scrapy.Spider):
                 "//*[@id='article-header']/header/p/span/text()"
             ).get(),
         }
+        yield scrapy.Request(
+            image_url,
+            callback=self.parse_news_image,
+            cb_kwargs={"item": item},
+        )
+
+    def parse_news_image(self, response, item):
+        self.logger.info(response.headers)
+        # FIXME: KeyError
+        # item["image"]["length"] = response.headers["content-length"]
+        yield item
