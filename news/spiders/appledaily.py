@@ -76,6 +76,11 @@ class AppleDailySpider(scrapy.Spider):
             "title": response.xpath(
                 "//*[@id='article-header']/header/div/h1/span/text()"
             ).get(),
+            "summary": "".join(
+                response.xpath(
+                    "//*[@id='articleBody']/section[2]/p[1]/descendant-or-self::*/text()"
+                ).getall()
+            ),
             "context": "\n".join(
                 [
                     "".join(sel.xpath("descendant-or-self::*/text()").getall())
@@ -105,7 +110,5 @@ class AppleDailySpider(scrapy.Spider):
         )
 
     def parse_news_image(self, response, item):
-        self.logger.info(response.headers)
-        # FIXME: KeyError
-        # item["image"]["length"] = response.headers["content-length"]
+        item["image"]["length"] = str(len(response.body))
         yield item

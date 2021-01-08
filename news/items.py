@@ -9,7 +9,9 @@ import scrapy
 class NewsItem(scrapy.Item):
     url = scrapy.Field()  # link, guid
     title = scrapy.Field()  # title
-    context = scrapy.Field()  # description
+    summary = scrapy.Field()  # description
+    context = scrapy.Field()  # description (complete raw text)
+    rich_context = scrapy.Field()  # description (complete HTML)
     author = scrapy.Field()  # author
     image = scrapy.Field()  # enclosure
     category = scrapy.Field()  # category
