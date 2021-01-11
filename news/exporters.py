@@ -153,19 +153,23 @@ class RSSExporter(XmlItemExporter):
         if hasattr(serialized_value, "items"):
             self._beautify_newline()
             for subname, value in serialized_value.items():
-                self._export_xml_field(subname, value, depth=depth + 1)
+                self._export_xml_field(
+                    subname, value, depth=depth + 1, escape_content=escape_content
+                )
             self._beautify_indent(depth=depth)
         elif is_listlike(serialized_value):
             self._beautify_newline()
             for value in serialized_value:
-                self._export_xml_field("value", value, depth=depth + 1)
+                self._export_xml_field(
+                    "value", value, depth=depth + 1, escape_content=escape_content
+                )
             self._beautify_indent(depth=depth)
         elif serialized_value:  # Make sure content is not empty
-            content = escape(str(serialized_value))
+            content = str(serialized_value)
             if escape_content:
                 self._xg_raw_characters(f"<![CDATA[{content}]]>")
             else:
-                self._xg_raw_characters(content)
+                self._xg_raw_characters(escape(content))
         self.xg.endElement(name)
         self._beautify_newline()
 

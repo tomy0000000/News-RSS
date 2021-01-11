@@ -2,9 +2,8 @@ from news.exporters import RSSExporter
 
 ITEM_TO_RSS_MAPPING = {
     "url": ["link", "guid"],
-    "context": ["description"],
+    "rich_context": ["description"],
     "image": ["enclosure"],
-    "id": ["guid"],
     "timestamp": ["pubDate"],
     "third_party": ["source"],
 }

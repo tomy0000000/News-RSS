@@ -87,6 +87,9 @@ class AppleDailySpider(scrapy.Spider):
                     for sel in context_selector
                 ]
             ),
+            "rich_context": response.xpath(
+                "//*[@id='article-body']/self::node()"
+            ).get(),
             "author": context_selector.re_first(r"【(.*)】"),
             "image": {
                 "url": image_url,
