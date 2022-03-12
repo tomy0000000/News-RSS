@@ -1,4 +1,4 @@
-from news.exporters import RSSExporter
+from parsers.exporters import RSSExporter
 
 ITEM_TO_RSS_MAPPING = {
     "url": ["link", "guid"],
