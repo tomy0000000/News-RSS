@@ -1,8 +1,9 @@
 from datetime import datetime
 from email.utils import format_datetime
+from uuid import uuid4
 from xml.sax.saxutils import escape
 
-from scrapy.exporters import XmlItemExporter
+from scrapy.exporters import PythonItemExporter, XmlItemExporter
 from scrapy.utils.python import is_listlike
 
 VALID_RSS_ELEMENTS = {
@@ -59,6 +60,18 @@ VALID_RSS_ELEMENTS = {
 # https://www.w3schools.com/xml/rss_tag_enclosure.asp
 
 
+def _clean_item_field(value):
+    # Format timestamp
+    if isinstance(value, datetime):
+        return format_datetime(value)
+
+    # Fill empty field with empty string
+    if value is None:
+        return ""
+
+    return value
+
+
 class RSSExporter(XmlItemExporter):
     def __init__(self, file, channel_meta, **kwargs):
         self.file = file
@@ -97,11 +110,13 @@ class RSSExporter(XmlItemExporter):
         # Didn't actually write to file, store to list and write after sorting
         self.item_list.append(item)
 
-    def write_item(self, item):
+    def _write_item(self, item):
         # Edit from `export_item` from `scrapy.exporters.XmlItemExporter`
+
         self._beautify_indent(depth=2)
         self.xg.startElement(self.item_element, {})
         self._beautify_newline()
+
         for name, value in self._get_serialized_fields(item, default_value=""):
             if name not in VALID_RSS_ELEMENTS["item"]:
                 continue
@@ -112,10 +127,7 @@ class RSSExporter(XmlItemExporter):
                 continue
 
             # Cleanup data
-            if isinstance(value, datetime):  # Format timestamp
-                value = format_datetime(value)
-            elif value is None:  # Fill empty field with empty string
-                value = ""
+            value = _clean_item_field(value)
 
             # Write to xml
             self._export_xml_field(
@@ -124,6 +136,7 @@ class RSSExporter(XmlItemExporter):
                 depth=3,
                 escape_content=VALID_RSS_ELEMENTS["item"][name],
             )
+
         self._beautify_indent(depth=2)
         self.xg.endElement(self.item_element)
         self._beautify_newline(new_item=True)
@@ -132,7 +145,7 @@ class RSSExporter(XmlItemExporter):
         # Sort and write items
         self.item_list.sort(key=lambda x: x["pubDate"], reverse=True)
         for item in self.item_list:
-            self.write_item(item)
+            self._write_item(item)
 
         # channel tag
         self._beautify_indent(depth=1)
@@ -179,3 +192,27 @@ class RSSExporter(XmlItemExporter):
             if not isinstance(content, str):
                 content = str(content, self.xg._encoding)
             self.xg._write(content)
+
+
+class CouchDBExporter(PythonItemExporter):
+    def __init__(self, db_session, db_uri, ARTICLES_DB):
+        super().__init__(binary=False)
+        self.db_session = db_session
+        self.db_uri = db_uri
+        self.ARTICLES_DB = ARTICLES_DB
+
+    def export_item(self, item):
+        cleaned = {}
+        for name, value in self._get_serialized_fields(item, default_value=""):
+            # Skip image
+            if name == "enclosure":
+                continue
+
+            # Cleanup data
+            value = _clean_item_field(value)
+            cleaned[name] = value
+
+        # Add to database
+        self.db_session.put(
+            f"{self.db_uri}/{self.ARTICLES_DB}/{uuid4()}", json=cleaned
+        ).raise_for_status()

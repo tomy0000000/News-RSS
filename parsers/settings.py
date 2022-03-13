@@ -63,7 +63,8 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "parsers.pipelines.NewsPipeline": 300,
+    "parsers.pipelines.RSSPipeline": 300,
+    "parsers.pipelines.CouchDBPipeline": 800,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
