@@ -20,6 +20,7 @@ def extend_to_rss_field(item):
             for rss_field in ITEM_TO_RSS_MAPPING[field]:
                 new_fields[rss_field] = value
     item.update(new_fields)
+    item["image"]
     return item
 
 
@@ -34,7 +35,7 @@ class RSSPipeline:
         self.file.close()
 
     def process_item(self, item, spider):
-        item = extend_to_rss_field(item)
+        item = extend_to_rss_field(item.dict())
         self.exporter.export_item(item)
         return item
 

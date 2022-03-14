@@ -29,12 +29,12 @@ VALID_RSS_ELEMENTS = {
         "webMaster",
     ],
     "channel_image": [
-        "description",
-        "height",
-        "link",
-        "title",
         "url",
+        "title",
+        "link",
         "width",
+        "height",
+        "description",
     ],
     "item": {  # value: should this field be escaped
         "author": True,
@@ -95,14 +95,10 @@ class RSSExporter(XmlItemExporter):
                 continue
             if field == "image":
                 image_value = {}
-                if isinstance(value, dict):
-                    for image_field in VALID_RSS_ELEMENTS["channel_image"]:
-                        image_value[image_field] = value.get(image_field)
-                elif isinstance(value, str):
-                    image_value["url"] = value
                 for image_field in VALID_RSS_ELEMENTS["channel_image"]:
-                    if image_field not in image_value or not image_value[image_field]:
-                        image_value[image_field] = self.channel_meta.get(image_field)
+                    field_value = getattr(self.channel_meta["image"], image_field, None)
+                    if field_value:
+                        image_value[image_field] = field_value
                 value = image_value
             self._export_xml_field(field, value, depth=2)
 
@@ -123,8 +119,13 @@ class RSSExporter(XmlItemExporter):
 
             # Special handler for image
             if name == "enclosure":
+                value = {k: v for k, v in value.items() if v is not None}
                 self._export_xml_field(name, None, depth=3, attributes=value)
                 continue
+
+            # Special handler for category
+            if name == "category":
+                value = value[0]["name"]
 
             # Cleanup data
             value = _clean_item_field(value)
